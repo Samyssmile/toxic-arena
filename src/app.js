@@ -5,8 +5,10 @@ let app = new PIXI.Application({ width: 768, height: 768 });
 
 document.body.appendChild(app.view);
 
-var levelManager = new LevelManager();
+let levelManager = new LevelManager();
+levelManager.loadLevel(app);
 
-levelManager.loadLevel();
 
-let sprite = PIXI.Sprite.from('sample.png');
+
+
+
