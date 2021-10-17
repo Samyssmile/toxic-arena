@@ -8,18 +8,17 @@ let levelManager = new LevelManager();
 levelManager.loadLevel(app);
 
 let keys = {};
-let keysDiv;
 
 let player = PIXI.Sprite.from("../src/assets/sprites/toxic-player-green.png");
-app.stage.addChild(player);
 player.height = 64;
 player.width = 64;
+app.stage.addChild(player);
+app.stage.setChildIndex(player, 1);
 
 window.addEventListener("keydown", keysDown);
 window.addEventListener("keyup", keysUp);
 
 app.ticker.add(gameLoop);
-keysDiv = document.querySelector("#keys");
 
 function keysDown(e) {
   keys[e.keyCode] = true;
@@ -31,16 +30,13 @@ function keysUp(e) {
 
 function gameLoop() {
   if (keys["87"] || keys["38"]) {
-    player.y -= 5;
-  }
-  if (keys["65"] || keys["37"]) {
-    player.x -= 5;
-  }
-  if (keys["83"] || keys["40"]) {
-    player.y += 5;
-  }
-  if (keys["68"] || keys["39"]) {
-    player.x += 5;
+    player.y -= 6;
+  } else if (keys["65"] || keys["37"]) {
+    player.x -= 6;
+  } else if (keys["83"] || keys["40"]) {
+    player.y += 6;
+  } else if (keys["68"] || keys["39"]) {
+    player.x += 6;
   }
   if (keys["32"]) {
     dropToxic(player.x, player.y);
@@ -49,8 +45,10 @@ function gameLoop() {
 
 function dropToxic(poitionX, positionY) {
   let toxicBarrel = PIXI.Sprite.from("../src/assets/sprites/toxic-barrel.png");
-  app.stage.addChild(toxicBarrel);
   toxicBarrel.position.set(poitionX, positionY);
   toxicBarrel.height = 64;
   toxicBarrel.width = 64;
+
+  app.stage.addChild(toxicBarrel);
+  app.stage.setChildIndex(toxicBarrel, 0);
 }

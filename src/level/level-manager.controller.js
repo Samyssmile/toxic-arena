@@ -35,8 +35,8 @@ export default class LevelManager {
           PATH_WALL = "../src/assets/levels/wall.png";
           let player = PIXI.Sprite.from("../src/assets/sprites/toxic-player-green.png");
           app.stage.addChild(player);
-          player.height = 64;
-          player.width = 64;
+          player.height = 40;
+          player.width = 40;
           player.y = i * this.BLOCK_WIDTH;
           player.x = y * this.BLOCK_WIDTH;
           /* player.position.set(i * this.BLOCK_WIDTH, y * this.BLOCK_WIDTH); */
