@@ -10,7 +10,7 @@ levelManager.loadLevel(app);
 let keys = {};
 let keysDiv;
 
-let player = PIXI.Sprite.from("../src/assets/sprites/toxic-player-green.jpg");
+let player = PIXI.Sprite.from("../src/assets/sprites/toxic-player-green.png");
 app.stage.addChild(player);
 player.height = 64;
 player.width = 64;
