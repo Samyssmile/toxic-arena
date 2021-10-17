@@ -1,2 +1,4 @@
-const app = new PIXI.Application({ width: 640, height: 360 });
+let app = new PIXI.Application({ width: 640, height: 360 });
 document.body.appendChild(app.view);
+
+// loadLevel("./level_01.txt")
