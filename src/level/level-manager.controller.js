@@ -1,7 +1,15 @@
-export default class LevelManager{
+export default class LevelManager {
 
-    loadLevel(levelFile){
-        console.log("Level loaded: "+levelFile)
+    firstLevel =
+        "XXXXXX," +
+        "XEEEEX," +
+        "XEEXEX," +
+        "XEEXEX," +
+        "XXXXXX,"
+
+    loadLevel() {
+        console.log("Loading level. "+this.firstLevel)
+        return this.firstLevel;
     }
 
 }
