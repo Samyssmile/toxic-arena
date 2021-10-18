@@ -3,13 +3,14 @@ const {Sound} = PIXI.sound;
 export default class LevelManager {
     BLOCK_WIDTH = 64;
     PATH_WALL = "../src/assets/levels/wall.png";
+    PATH_PLAYER = "../src/assets/sprites/player/player-sheet.png"
     WALL_SIGN = "X";
     PLAYER_SIGN = "P";
     CENTER_SHIFT=4;
     wallArray = [];
 
     player;
-
+    playerSheet = {};
 
     constructor(app) {
         this.app = app;
@@ -29,21 +30,86 @@ export default class LevelManager {
                     this.wallArray.push(wall);
                 }
                 if (levelRow.charAt(y) === this.PLAYER_SIGN) {
-                    this.PATH_WALL = "../src/assets/levels/wall.png";
-                    this.player = PIXI.Sprite.from("../src/assets/sprites/toxic-player-green.png");
-                    this.player.getBounds();
-                    console.log("Player loaded: " + this.player);
-                    this.app.stage.addChild(this.player);
-                    this.player.height = 64;
-                    this.player.width = 64;
-                    this.player.y = i * this.BLOCK_WIDTH;
-                    this.player.x = y * this.BLOCK_WIDTH;
+                    this.app.loader.add("player", this.PATH_PLAYER )
+                    this.app.loader.load(this.setup(i * this.BLOCK_WIDTH, y * this.BLOCK_WIDTH));
+
+
                 }
             }
         }
         return firstLevel;
     }
 
+    setup(playerInitialXCoord, playerInitialYCoord){
+        this.createPlayerSheet();
+        this.createPlayer(playerInitialXCoord, playerInitialYCoord)
+        this.app.ticker.add(this.gameLoop());
+    }
+
+    createPlayer(playerInitialXCoord, playerInitialYCoord){
+        this.player = new PIXI.AnimatedSprite(this.playerSheet.walkEast);
+        this.player.anchor.set(0.5);
+        this.player.animationSpeed = .2;
+        this.player.loop = true;
+        this.player.x = playerInitialXCoord;
+        this.player.y = playerInitialYCoord;
+        this.player.height = 64;
+        this.player.width = 64;
+        this.app.stage.addChild(this.player);
+        this.player.play();
+    }
+    createPlayerSheet(){
+        let  ssheet = new PIXI.BaseTexture.from(this.app.loader.resources["player"].url);
+        let w = 64;
+        let h = 64;
+
+        this.playerSheet["standSouth"] = [
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(1 * w, 0, w,h))
+        ];
+        this.playerSheet["standWest"] = [
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(2 * w, 0, w,h))
+        ];
+        this.playerSheet["standEast"] = [
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(3 * w, 0, w,h))
+        ];
+        this.playerSheet["standNorth"] = [
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(4 * w, 0, w,h))
+        ];
+
+
+        this.playerSheet["walkNorth"] = [
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(4*w, 0, w, h)),
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(5*w, 0, w, h)),
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(6*w, 0, w, h)),
+        ]
+        this.playerSheet["walkEast"] = [
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(7*w, 0, w, h)),
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(8*w, 0, w, h)),
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(9*w, 0, w, h)),
+        ]
+        this.playerSheet["walkSouth"] = [
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(10*w, 0, w, h)),
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(11*w, 0, w, h)),
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(12*w, 0, w, h)),
+        ]
+        this.playerSheet["walkWest"] = [
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(13*w, 0, w, h)),
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(14*w, 0, w, h)),
+            new PIXI.Texture(ssheet, new PIXI.Rectangle(15*w, 0, w, h)),
+        ]
+
+        let numberOfFrames = 4;
+
+    }
+
+
+
+
+
+
+    gameLoop() {
+        const stepInPixels = 4;
+    }
     moveTop(pixelStep) {
         this.player.y -= pixelStep;
         let intersects = false;
@@ -198,17 +264,6 @@ export default class LevelManager {
 
     }
 
-    isCollision(shadowCopyPlayer) {
-        let collides = false;
-        for (let i = 0; i < this.wallArray.length; i++) {
-            let wall = this.wallArray[i];
-            collides = this.intersects(shadowCopyPlayer, wall);
-            if (collides) {
-                break;
-            }
-        }
-        return collides;
-    }
 
     collisionDetection(playerSprite, wallSprite) {
         let playerBox = playerSprite.getBounds();
