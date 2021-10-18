@@ -23,9 +23,9 @@ function keysUp(e) {
 }
 
 function gameLoop() {
-    const stepInPixels = 2;
+    const stepInPixels = 4;
     if (keys["87"] || keys["38"]) {
-        levelManager.moveBottom(stepInPixels);
+        levelManager.moveTop(stepInPixels);
 
     }else
     if (keys["65"] || keys["37"]) {
@@ -33,7 +33,7 @@ function gameLoop() {
 
     }else
     if (keys["83"] || keys["40"]) {
-        levelManager.moveTop(stepInPixels);
+        levelManager.moveBottom(stepInPixels);
 
     }else
     if (keys["68"] || keys["39"]) {
