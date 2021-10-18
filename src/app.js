@@ -2,10 +2,24 @@ import LevelManager from "./level/level-manager.controller.js";
 
 let app = new PIXI.Application({width: 768, height: 768, backgroundColor: 123207});
 
+let firstLevel =
+    "XXXXXXXXXXXX," +
+    "XPEEEXXXXEEX," +
+    "XXXXEXXXEEEX," +
+    "XEEXEEEEEXEX," +
+    "XEEXEXXEXEEX," +
+    "XEEXEEEEEEX," +
+    "XEEXEEEEEEEX," +
+    "XEEXEEEXXXEX," +
+    "XEEEEEEXEEEX," +
+    "XEEXEEEXEEXX," +
+    "XEEXEEEEEEEX," +
+    "XXXXXXXXXXXX,";
+
 document.body.appendChild(app.view);
 
 let levelManager = new LevelManager(app);
-levelManager.loadLevel();
+levelManager.startGameWithLevel(firstLevel);
 
 let keys = {};
 

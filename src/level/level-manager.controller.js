@@ -5,32 +5,18 @@ export default class LevelManager {
     PATH_WALL = "../src/assets/levels/wall.png";
     WALL_SIGN = "X";
     PLAYER_SIGN = "P";
-    CENTER_SHIFT=3;
+    CENTER_SHIFT=4;
     wallArray = [];
 
     player;
-    firstLevel =
-        "XXXXXXXXXXXX," +
-        "XPEEEXXXXEEX," +
-        "XXXXEXXXEEEX," +
-        "XEEXEEEEEXEX," +
-        "XEEXEXXEXEEX," +
-        "XEEXEEEEEEX," +
-        "XEEXEEEEEEEX," +
-        "XEEXEEEXXXEX," +
-        "XEEEEEEXEEEX," +
-        "XEEXEEEXEEXX," +
-        "XEEXEEEEEEEX," +
-        "XXXXXXXXXXXX,";
+
 
     constructor(app) {
         this.app = app;
     }
 
-    loadLevel() {
-        console.log("Loading level. " + this.firstLevel);
-
-        let levelColumn = this.firstLevel.split(",");
+    startGameWithLevel(firstLevel) {
+        let levelColumn = firstLevel.split(",");
         for (let i = 0; i < levelColumn.length; i++) {
             let levelRow = levelColumn[i];
             for (let y = 0; y < levelRow.length; y++) {
@@ -55,7 +41,7 @@ export default class LevelManager {
                 }
             }
         }
-        return this.firstLevel;
+        return firstLevel;
     }
 
     moveTop(pixelStep) {
@@ -243,7 +229,7 @@ export default class LevelManager {
         let circleDistanceX = Math.abs(circle.x - rect.x);
         let circleDistanceY = Math.abs(circle.y - rect.y);
 
-        let radiusDivider = 2.1;
+        let radiusDivider = 2.13;
         if (circleDistanceX > rect.width / radiusDivider + circle.width / radiusDivider) {
             return false;
         }
