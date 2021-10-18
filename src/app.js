@@ -46,5 +46,6 @@ function gameLoop() {
 }
 
 
-app.stage.addChild(toxicBarrel);
+/* app.stage.addChild(toxicBarrel);
 app.stage.setChildIndex(toxicBarrel, 0);
+ */
