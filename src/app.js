@@ -1,29 +1,14 @@
 import LevelManager from "./level/level-manager.controller.js";
+import LevelService from "./level/level.service.js";
 
-let app = new PIXI.Application({width: 1024, height: 1024, backgroundColor: 123207});
-
-let firstLevel =
-    "XXXXXXXXXXXXXXXX," +
-    "XPEEEXXXXEEXEEEX," +
-    "XXXXEXXXEEEXEEEX," +
-    "XEEEEEEEEXEXEEEX," +
-    "XEEXEXXEXEEXEXEX," +
-    "XXXXEEEEEEXEEXEX," +
-    "XEEXEEEEEEEEEXEX," +
-    "XEEXEEEXXXEXEEEX," +
-    "XEEEEEEXEEEXEEXX," +
-    "XEEXEEXXEEXXEEEX," +
-    "XEEXEEEEEXXXEEEX," +
-    "XEEXEEEEEEEXEEEX," +
-    "XEEXEEEXXEEXEEXX," +
-    "XEEXEEEXEEEXEXXX," +
-    "XEEXEEEXEEEXEEXX," +
-    "XXXXXXXXXXXXXXXX,";
+let app = new PIXI.Application({width: 1024, height: 1024, backgroundColor: 0xE28743});
 
 document.body.appendChild(app.view);
 
+let levelService = new LevelService();
 let levelManager = new LevelManager(app);
-levelManager.startGameWithLevel(firstLevel);
+
+levelManager.startGameWithLevel(levelService.getNextLevel());
 
 let keys = {};
 
