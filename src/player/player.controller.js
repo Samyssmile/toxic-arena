@@ -1,4 +1,4 @@
-let keys = {};
+/* let keys = {};
 
 export default class PlayerController {
   loadPlayer(app, player) {
@@ -42,3 +42,4 @@ export default class PlayerController {
     toxicBarrel.width = 64;
   }
 }
+ */

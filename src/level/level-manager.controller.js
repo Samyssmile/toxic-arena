@@ -1,5 +1,3 @@
-const { Sound } = PIXI.sound;
-
 export default class LevelManager {
   BLOCK_WIDTH = 64;
   PATH_WALL = "../src/assets/levels/wall.png";
@@ -8,12 +6,24 @@ export default class LevelManager {
   PLAYER_SIGN = "P";
   CENTER_SHIFT = 4;
   wallArray = [];
+  keys = {};
 
   player;
   playerSheet = {};
 
   constructor(app) {
     this.app = app;
+    this.windowEventListener();
+  }
+
+  windowEventListener() {
+    window.addEventListener("keydown", (e) => {
+      console.log(e.code);
+      this.keys[e.code] = true;
+    });
+    window.addEventListener("keyup", (e) => {
+      this.keys[e.code] = false;
+    });
   }
 
   startGameWithLevel(firstLevel) {
@@ -41,15 +51,32 @@ export default class LevelManager {
   setup(playerInitialXCoord, playerInitialYCoord) {
     this.createPlayerSheet();
     this.createPlayer(playerInitialXCoord, playerInitialYCoord);
-    //COM der gameLoop wird nicht genutzt
-    this.app.ticker.add(this.gameLoop());
+    this.app.ticker.add(() => {
+      const pixelStep = 5;
+      console.log(this.keys);
+      console.log("test");
+      if (this.keys["KeyW"] || this.keys["ArrowUp"]) {
+        console.log("key w");
+        this.moveTop(pixelStep);
+      }
+      if (this.keys["KeyA"] || this.keys["ArrowLeft"]) {
+        this.moveLeft(pixelStep);
+      }
+      if (this.keys["KeyS"] || this.keys["ArrowDown"]) {
+        this.moveBottom(pixelStep);
+      }
+      if (this.keys["KeyD"] || this.keys["ArrowRight"]) {
+        this.moveRight(pixelStep);
+      }
+      if (this.keys["Space"]) {
+        dropToxicBarrel(this.player.x, this.player.y, app);
+      }
+    });
   }
 
-  //COM wollen wir den player nicht auslagern sodass der player seine eigene datei hat wo er erzeugt wird.
+  //TODO wird ausgelagert in eigene Klasse
   createPlayer(playerInitialXCoord, playerInitialYCoord) {
     this.player = new PIXI.AnimatedSprite(this.playerSheet.walkEast);
-    //COM der anchor ist hier falsch du bestimmst weiter unten die position ?
-    this.player.anchor.set(0.5);
     this.player.animationSpeed = 0.2;
     this.player.loop = true;
     this.player.x = playerInitialXCoord;
@@ -89,18 +116,12 @@ export default class LevelManager {
       new PIXI.Texture(ssheet, new PIXI.Rectangle(14 * w, 0, w, h)),
       new PIXI.Texture(ssheet, new PIXI.Rectangle(15 * w, 0, w, h)),
     ];
-
-    //COM wird nicht genutzt ?
-    let numberOfFrames = 4;
   }
 
-  gameLoop() {
-    //COM wird nicht genutzt
-    const stepInPixels = 4;
-  }
-
-  //COM moveTop Bottom Left Right ist sehr viel gleicher code ich werde den zusammenfügen.
+  //TODO moveTop, moveBottom, moveLeft, moveRight zusammenfügen
   moveTop(pixelStep) {
+    console.log("moveTop");
+    console.log(this.player.y);
     this.player.y -= pixelStep;
     let intersects = false;
     for (let i = 0; i < this.wallArray.length; i++) {
@@ -286,8 +307,9 @@ export default class LevelManager {
 
     return cornerDistance_sq <= ((circle.width / radiusDivider) ^ 2);
   }
-  //COM sollte bei den Playercontrolls sein und nicht im level manager
-  dropToxicBomb() {
+
+  //TODO kommt in eigene Klasse
+  dropToxicBarrel() {
     let toxicBarrel = PIXI.Sprite.from("../src/assets/sprites/toxic-barrel.png");
     this.app.stage.addChild(toxicBarrel);
     toxicBarrel.position.set(this.player.x, this.player.y);
