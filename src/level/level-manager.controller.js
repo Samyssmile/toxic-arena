@@ -1,19 +1,35 @@
 const {Sound} = PIXI.sound;
-
 export default class LevelManager {
     BLOCK_WIDTH = 64;
     PATH_WALL = "../src/assets/levels/wall.png";
     PATH_PLAYER = "../src/assets/sprites/player/player-sheet.png"
+    PATH_BARREL = "../src/assets/sprites/bomb/bomb_v2/bomb_sheet.png"
     WALL_SIGN = "X";
     PLAYER_SIGN = "P";
-    CENTER_SHIFT=4;
+    CENTER_SHIFT = 4;
     wallArray = [];
-
     player;
+    barrel;
     playerSheet = {};
+    barrelSheet= {};
+    liveBarrelCounter =0;
+    keys = {}
 
     constructor(app) {
         this.app = app;
+        window.addEventListener("keypress", (e) => {
+                this.keys[e.code] = true;
+        });
+        window.addEventListener("keyup", (e) => {
+            this.keys[e.code] = false;
+        });
+
+        this.addResources();
+    }
+
+    addResources(){
+        this.app.loader.add("player", this.PATH_PLAYER)
+        this.app.loader.add("barrel", this.PATH_BARREL)
     }
 
     startGameWithLevel(firstLevel) {
@@ -30,86 +46,155 @@ export default class LevelManager {
                     this.wallArray.push(wall);
                 }
                 if (levelRow.charAt(y) === this.PLAYER_SIGN) {
-                    this.app.loader.add("player", this.PATH_PLAYER )
                     this.app.loader.load(this.setup(i * this.BLOCK_WIDTH, y * this.BLOCK_WIDTH));
-
-
                 }
             }
         }
         return firstLevel;
     }
-
-    setup(playerInitialXCoord, playerInitialYCoord){
+    setup(playerInitialXCoord, playerInitialYCoord) {
         this.createPlayerSheet();
+        this.createBarrelSheet();
+
         this.createPlayer(playerInitialXCoord, playerInitialYCoord)
-        this.app.ticker.add(this.gameLoop());
+        this.app.ticker.add(() => {
+            const stepInPixels = 4;
+                if (this.keys['KeyD'] || this.keys["ArrowRight"]) {
+                    if (!this.player.playing) {
+                        this.player.textures = this.playerSheet.walkEast;
+                        this.player.play();
+                    }
+                    this.moveRight(stepInPixels);
+                }
+                if (this.keys["KeyA"] || this.keys["ArrowLeft"]) {
+                    if (!this.player.playing) {
+                        this.player.textures = this.playerSheet.walkWest;
+                        this.player.play();
+                    }
+                    this.moveLeft(stepInPixels);
+                }
+                if (this.keys["KeyS"] || this.keys["ArrowDown"]) {
+                    if (!this.player.playing) {
+                        this.player.textures = this.playerSheet.walkSouth;
+                        this.player.play();
+                    }
+                    this.moveBottom(stepInPixels)
+                }
+                if (this.keys["KeyW"] || this.keys["ArrowUp"]) {
+                    if (!this.player.playing) {
+                        this.player.textures = this.playerSheet.walkNorth;
+                        this.player.play();
+                    }
+                    this.moveTop(stepInPixels)
+                }
+                if (this.keys["Space"]) {
+                    this.dropToxicBomb(this.player.x, this.player.y, this.app);
+                }
+        });
+
     }
 
-    createPlayer(playerInitialXCoord, playerInitialYCoord){
+    createPlayer(playerInitialXCoord, playerInitialYCoord) {
         this.player = new PIXI.AnimatedSprite(this.playerSheet.walkEast);
-        this.player.anchor.set(0.5);
-        this.player.animationSpeed = .2;
-        this.player.loop = true;
+        this.player.animationSpeed = .15;
+        this.player.loop = false;
         this.player.x = playerInitialXCoord;
         this.player.y = playerInitialYCoord;
         this.player.height = 64;
         this.player.width = 64;
         this.app.stage.addChild(this.player);
-        this.player.play();
     }
-    createPlayerSheet(){
-        let  ssheet = new PIXI.BaseTexture.from(this.app.loader.resources["player"].url);
+
+    dropToxicBomb() {
+        this.liveBarrelCounter +=1;
+        if (this.liveBarrelCounter<2){
+            let toxicBarrel = new PIXI.AnimatedSprite(this.barrelSheet.barrelSpawn);
+            toxicBarrel.position.x = this.player.x;
+            toxicBarrel.position.y =  this.player.y;
+            toxicBarrel.animationSpeed = .15;
+            toxicBarrel.loop = false;
+            toxicBarrel.height = 64;
+            toxicBarrel.width = 64;
+            this.app.stage.addChild(toxicBarrel);
+
+            const boobSound = Sound.from("../src/assets/audio/toxic-place.wav");
+            boobSound.play();
+
+            setTimeout( ()=>{
+                toxicBarrel.textures = this.barrelSheet.barrelExplosion;
+                toxicBarrel.play();
+                toxicBarrel.onComplete =  ()=> {
+                    this.app.stage.removeChild(toxicBarrel);
+                    this.liveBarrelCounter=0;
+                };
+
+            } , 2000);
+        }
+    }
+
+
+    createBarrelSheet() {
+        let spriteSheet = new PIXI.BaseTexture.from(this.app.loader.resources["barrel"].url);
+        let w = 64;
+        let h = 64;
+
+        this.barrelSheet["barrelSpawn"] = [
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(0, 0, w, h))
+        ];
+
+        this.barrelSheet["barrelExplosion"] = [
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(0, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(2* w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(3 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(4 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(5 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(6 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(7 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(8 * w, 0, w, h)),
+        ];
+    }
+
+    createPlayerSheet() {
+        let spriteSheet = new PIXI.BaseTexture.from(this.app.loader.resources["player"].url);
         let w = 64;
         let h = 64;
 
         this.playerSheet["standSouth"] = [
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(1 * w, 0, w,h))
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(w, 0, w, h))
         ];
         this.playerSheet["standWest"] = [
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(2 * w, 0, w,h))
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(2 * w, 0, w, h))
         ];
         this.playerSheet["standEast"] = [
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(3 * w, 0, w,h))
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(3 * w, 0, w, h))
         ];
         this.playerSheet["standNorth"] = [
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(4 * w, 0, w,h))
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(4 * w, 0, w, h))
         ];
 
-
         this.playerSheet["walkNorth"] = [
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(4*w, 0, w, h)),
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(5*w, 0, w, h)),
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(6*w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(4 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(5 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(6 * w, 0, w, h)),
         ]
         this.playerSheet["walkEast"] = [
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(7*w, 0, w, h)),
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(8*w, 0, w, h)),
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(9*w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(7 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(8 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(9 * w, 0, w, h)),
         ]
         this.playerSheet["walkSouth"] = [
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(10*w, 0, w, h)),
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(11*w, 0, w, h)),
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(12*w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(10 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(11 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(12 * w, 0, w, h)),
         ]
         this.playerSheet["walkWest"] = [
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(13*w, 0, w, h)),
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(14*w, 0, w, h)),
-            new PIXI.Texture(ssheet, new PIXI.Rectangle(15*w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(13 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(14 * w, 0, w, h)),
+            new PIXI.Texture(spriteSheet, new PIXI.Rectangle(15 * w, 0, w, h)),
         ]
-
-        let numberOfFrames = 4;
-
     }
 
 
-
-
-
-
-    gameLoop() {
-        const stepInPixels = 4;
-    }
     moveTop(pixelStep) {
         this.player.y -= pixelStep;
         let intersects = false;
@@ -119,23 +204,23 @@ export default class LevelManager {
 
             if (intersects) {
                 let xPlayerCenter = (this.player.x + this.player.width) / 2;
-                let xWallCenter = (wall.x+wall.width)/2;
-                if (xPlayerCenter>(xWallCenter+this.CENTER_SHIFT)){
+                let xWallCenter = (wall.x + wall.width) / 2;
+                if (xPlayerCenter > (xWallCenter + this.CENTER_SHIFT)) {
                     let shadowCopyPlayerRectangle = new PIXI.Rectangle;
                     shadowCopyPlayerRectangle = Object.assign(shadowCopyPlayerRectangle, this.player.getBounds())
-                    shadowCopyPlayerRectangle.x = shadowCopyPlayerRectangle.x+65;
-                    if (this.intersects(shadowCopyPlayerRectangle, wall)){
-                    }else{
-                        this.player.x +=pixelStep
+                    shadowCopyPlayerRectangle.x = shadowCopyPlayerRectangle.x + 65;
+                    if (this.intersects(shadowCopyPlayerRectangle, wall)) {
+                    } else {
+                        this.player.x += pixelStep
                     }
                 }
-                if (xPlayerCenter<(xWallCenter-this.CENTER_SHIFT)){
+                if (xPlayerCenter < (xWallCenter - this.CENTER_SHIFT)) {
                     let shadowCopyPlayerRectangle = new PIXI.Rectangle;
                     shadowCopyPlayerRectangle = Object.assign(shadowCopyPlayerRectangle, this.player.getBounds())
-                    shadowCopyPlayerRectangle.x = shadowCopyPlayerRectangle.x-65;
-                    if (this.intersects(shadowCopyPlayerRectangle, wall)){
-                    }else{
-                        this.player.x -=pixelStep
+                    shadowCopyPlayerRectangle.x = shadowCopyPlayerRectangle.x - 65;
+                    if (this.intersects(shadowCopyPlayerRectangle, wall)) {
+                    } else {
+                        this.player.x -= pixelStep
                     }
                 }
                 break;
@@ -158,23 +243,23 @@ export default class LevelManager {
 
             if (intersects) {
                 let yPlayerCenter = (this.player.y + this.player.height) / 2;
-                let yWallCenter = (wall.y+wall.height)/2;
-                if (yPlayerCenter>(yWallCenter+this.CENTER_SHIFT)){
+                let yWallCenter = (wall.y + wall.height) / 2;
+                if (yPlayerCenter > (yWallCenter + this.CENTER_SHIFT)) {
                     let shadowCopyPlayerRectangle = new PIXI.Rectangle;
                     shadowCopyPlayerRectangle = Object.assign(shadowCopyPlayerRectangle, this.player.getBounds())
-                    shadowCopyPlayerRectangle.y = shadowCopyPlayerRectangle.y+65;
-                    if (this.intersects(shadowCopyPlayerRectangle, wall)){
-                    }else{
-                        this.player.y +=pixelStep
+                    shadowCopyPlayerRectangle.y = shadowCopyPlayerRectangle.y + 65;
+                    if (this.intersects(shadowCopyPlayerRectangle, wall)) {
+                    } else {
+                        this.player.y += pixelStep
                     }
                 }
-                if (yPlayerCenter<(yWallCenter-this.CENTER_SHIFT)){
+                if (yPlayerCenter < (yWallCenter - this.CENTER_SHIFT)) {
                     let shadowCopyPlayerRectangle = new PIXI.Rectangle;
                     shadowCopyPlayerRectangle = Object.assign(shadowCopyPlayerRectangle, this.player.getBounds())
-                    shadowCopyPlayerRectangle.y = shadowCopyPlayerRectangle.y-65;
-                    if (this.intersects(shadowCopyPlayerRectangle, wall)){
-                    }else{
-                        this.player.y -=pixelStep
+                    shadowCopyPlayerRectangle.y = shadowCopyPlayerRectangle.y - 65;
+                    if (this.intersects(shadowCopyPlayerRectangle, wall)) {
+                    } else {
+                        this.player.y -= pixelStep
                     }
                 }
                 break;
@@ -195,23 +280,23 @@ export default class LevelManager {
 
             if (intersects) {
                 let xPlayerCenter = (this.player.x + this.player.width) / 2;
-                let xWallCenter = (wall.x+wall.width)/2;
-                if (xPlayerCenter>(xWallCenter+this.CENTER_SHIFT)){
+                let xWallCenter = (wall.x + wall.width) / 2;
+                if (xPlayerCenter > (xWallCenter + this.CENTER_SHIFT)) {
                     let shadowCopyPlayerRectangle = new PIXI.Rectangle;
                     shadowCopyPlayerRectangle = Object.assign(shadowCopyPlayerRectangle, this.player.getBounds())
-                    shadowCopyPlayerRectangle.x = shadowCopyPlayerRectangle.x+65;
-                    if (this.intersects(shadowCopyPlayerRectangle, wall)){
-                    }else{
-                        this.player.x +=pixelStep
+                    shadowCopyPlayerRectangle.x = shadowCopyPlayerRectangle.x + 65;
+                    if (this.intersects(shadowCopyPlayerRectangle, wall)) {
+                    } else {
+                        this.player.x += pixelStep
                     }
                 }
-                if (xPlayerCenter<(xWallCenter-this.CENTER_SHIFT)){
+                if (xPlayerCenter < (xWallCenter - this.CENTER_SHIFT)) {
                     let shadowCopyPlayerRectangle = new PIXI.Rectangle;
                     shadowCopyPlayerRectangle = Object.assign(shadowCopyPlayerRectangle, this.player.getBounds())
-                    shadowCopyPlayerRectangle.x = shadowCopyPlayerRectangle.x-65;
-                    if (this.intersects(shadowCopyPlayerRectangle, wall)){
-                    }else{
-                        this.player.x -=pixelStep
+                    shadowCopyPlayerRectangle.x = shadowCopyPlayerRectangle.x - 65;
+                    if (this.intersects(shadowCopyPlayerRectangle, wall)) {
+                    } else {
+                        this.player.x -= pixelStep
                     }
                 }
                 break;
@@ -234,23 +319,23 @@ export default class LevelManager {
 
             if (intersects) {
                 let yPlayerCenter = (this.player.y + this.player.height) / 2;
-                let yWallCenter = (wall.y+wall.height)/2;
-                if (yPlayerCenter>(yWallCenter+this.CENTER_SHIFT)){
+                let yWallCenter = (wall.y + wall.height) / 2;
+                if (yPlayerCenter > (yWallCenter + this.CENTER_SHIFT)) {
                     let shadowCopyPlayerRectangle = new PIXI.Rectangle;
                     shadowCopyPlayerRectangle = Object.assign(shadowCopyPlayerRectangle, this.player.getBounds())
-                    shadowCopyPlayerRectangle.y = shadowCopyPlayerRectangle.y+65;
-                    if (this.intersects(shadowCopyPlayerRectangle, wall)){
-                    }else{
-                        this.player.y +=pixelStep
+                    shadowCopyPlayerRectangle.y = shadowCopyPlayerRectangle.y + 65;
+                    if (this.intersects(shadowCopyPlayerRectangle, wall)) {
+                    } else {
+                        this.player.y += pixelStep
                     }
                 }
-                if (yPlayerCenter<(yWallCenter-this.CENTER_SHIFT)){
+                if (yPlayerCenter < (yWallCenter - this.CENTER_SHIFT)) {
                     let shadowCopyPlayerRectangle = new PIXI.Rectangle;
                     shadowCopyPlayerRectangle = Object.assign(shadowCopyPlayerRectangle, this.player.getBounds())
-                    shadowCopyPlayerRectangle.y = shadowCopyPlayerRectangle.y-65;
-                    if (this.intersects(shadowCopyPlayerRectangle, wall)){
-                    }else{
-                        this.player.y -=pixelStep
+                    shadowCopyPlayerRectangle.y = shadowCopyPlayerRectangle.y - 65;
+                    if (this.intersects(shadowCopyPlayerRectangle, wall)) {
+                    } else {
+                        this.player.y -= pixelStep
                     }
                 }
                 break;
@@ -262,22 +347,6 @@ export default class LevelManager {
         }
 
 
-    }
-
-
-    collisionDetection(playerSprite, wallSprite) {
-        let playerBox = playerSprite.getBounds();
-        let wallBox = wallSprite.getBounds();
-
-        playerSprite.get;
-
-
-        return (
-            playerBox.x + playerBox.width > wallBox.x &&
-            playerBox.x < wallBox.x + wallBox.width &&
-            playerBox.y + playerBox.height > wallBox.y &&
-            playerBox.y < wallBox.y + wallBox.height
-        );
     }
 
     intersects(circle, rect) {
@@ -304,13 +373,4 @@ export default class LevelManager {
         return cornerDistance_sq <= ((circle.width / radiusDivider) ^ 2);
     }
 
-    dropToxicBomb() {
-        let toxicBarrel = PIXI.Sprite.from("../src/assets/sprites/toxic-barrel.png");
-        this.app.stage.addChild(toxicBarrel);
-        toxicBarrel.position.set(this.player.x, this.player.y);
-        toxicBarrel.height = 64;
-        toxicBarrel.width = 64;
-        const boobSound = Sound.from("../src/assets/audio/toxic-place.wav");
-        boobSound.play();
-    }
 }
