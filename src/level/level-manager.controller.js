@@ -1,3 +1,5 @@
+const { Sound } = PIXI.sound;
+
 export default class LevelManager {
   BLOCK_WIDTH = 64;
   PATH_WALL = "../src/assets/levels/wall.png";
@@ -18,7 +20,6 @@ export default class LevelManager {
 
   windowEventListener() {
     window.addEventListener("keydown", (e) => {
-      console.log(e.code);
       this.keys[e.code] = true;
     });
     window.addEventListener("keyup", (e) => {
@@ -53,8 +54,6 @@ export default class LevelManager {
     this.createPlayer(playerInitialXCoord, playerInitialYCoord);
     this.app.ticker.add(() => {
       const pixelStep = 5;
-      console.log(this.keys);
-      console.log("test");
       if (this.keys["KeyW"] || this.keys["ArrowUp"]) {
         console.log("key w");
         this.moveTop(pixelStep);
@@ -69,9 +68,22 @@ export default class LevelManager {
         this.moveRight(pixelStep);
       }
       if (this.keys["Space"]) {
-        dropToxicBarrel(this.player.x, this.player.y, app);
+        console.log("space pressed");
+        this.dropToxicBarrel();
       }
     });
+  }
+
+  //TODO kommt in eigene Klasse
+  dropToxicBarrel() {
+    console.log("inside Barrel");
+    let toxicBarrel = PIXI.Sprite.from("../src/assets/sprites/toxic-barrel.png");
+    this.app.stage.addChild(toxicBarrel);
+    toxicBarrel.position.set(this.player.x, this.player.y);
+    toxicBarrel.height = 64;
+    toxicBarrel.width = 64;
+    const boobSound = Sound.from("../src/assets/audio/toxic-place.wav");
+    boobSound.play();
   }
 
   //TODO wird ausgelagert in eigene Klasse
@@ -306,16 +318,5 @@ export default class LevelManager {
       (circleDistanceX - rect.width / radiusDivider) ^ (2 + (circleDistanceY - rect.height / radiusDivider)) ^ 2;
 
     return cornerDistance_sq <= ((circle.width / radiusDivider) ^ 2);
-  }
-
-  //TODO kommt in eigene Klasse
-  dropToxicBarrel() {
-    let toxicBarrel = PIXI.Sprite.from("../src/assets/sprites/toxic-barrel.png");
-    this.app.stage.addChild(toxicBarrel);
-    toxicBarrel.position.set(this.player.x, this.player.y);
-    toxicBarrel.height = 64;
-    toxicBarrel.width = 64;
-    const boobSound = Sound.from("../src/assets/audio/toxic-place.wav");
-    boobSound.play();
   }
 }
